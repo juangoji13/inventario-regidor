@@ -1,19 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
 
 :root {
-    --primary: #2563eb;
-    --primary-dark: #1e40af;
-    --accent: #fbbf24;
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: rgba(255, 255, 255, 0.6);
-    --glass-edge: rgba(255, 255, 255, 0.4);
-    --text-head: #0f172a;
-    --text-main: #1e293b;
-    --text-muted: #475569;
-    --industrial-slate: #334155;
-    --radius-lg: 28px;
-    --radius-md: 18px;
+    --primary: #3b82f6;
+    --primary-dark: #1d4ed8;
+    --accent: #f59e0b;
+    --bg-deep: #0f172a;
+    --bg-slate: #1e293b;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-highlight: rgba(255, 255, 255, 0.05);
+    --text-head: #f8fafc;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --industrial-blue: #4c6194;
+    --radius-lg: 24px;
+    --radius-md: 16px;
     --font-main: 'Outfit', sans-serif;
+    --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    --shadow-inner: inset 0 0 0 1px var(--glass-border);
 }
 
 * {
@@ -25,12 +29,10 @@
 
 body {
     font-family: var(--font-main);
-    background-color: #4c6194;
-    /* Fondo con viñeta más profunda para integrar el cristal */
-    background-image: radial-gradient(circle at center, rgba(15, 23, 42, 0.3) 0%, rgba(15, 23, 42, 0.7) 100%),
-        url('construction-site.jpg');
-    background-size: cover;
-    background-position: center;
+    background-color: var(--bg-deep);
+    background-image:
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 400px),
+        radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.05), transparent 400px);
     background-attachment: fixed;
     color: var(--text-main);
     line-height: 1.6;
@@ -79,34 +81,34 @@ body {
 }
 
 .auth-header h1 {
-    font-size: 3.5rem;
+    font-size: 4rem;
     color: white;
     font-weight: 800;
     letter-spacing: -2px;
     margin-bottom: 5px;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(to bottom, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .auth-header p {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.9rem;
-    font-weight: 600;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 4px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 6px;
+    opacity: 0.8;
 }
 
 .auth-card {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(30px) saturate(160%);
-    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--glass-border);
-    padding: 3.5rem 2.5rem;
+    padding: 3rem 2rem;
     border-radius: var(--radius-lg);
-    box-shadow:
-        0 30px 60px rgba(0, 0, 0, 0.25),
-        inset 0 0 0 1px var(--glass-edge);
-    animation: slideUp 0.8s ease-out;
+    box-shadow: var(--shadow-soft), var(--shadow-inner);
+    animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .form-group {
@@ -124,11 +126,11 @@ body {
 input,
 select {
     width: 100%;
-    background: white;
-    border: 1px solid #e2e8f0;
-    padding: 1rem;
-    border-radius: 14px;
-    color: var(--text-head);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    padding: 1.1rem;
+    border-radius: 12px;
+    color: white;
     font-size: 1rem;
     transition: all 0.3s ease;
     font-family: inherit;
@@ -138,7 +140,8 @@ input:focus,
 select:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
 .btn {
@@ -237,34 +240,33 @@ main {
 }
 
 .stat-card {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(20px) saturate(150%);
-    padding: 1.8rem 1.4rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(15px);
+    padding: 1.5rem;
     border-radius: var(--radius-md);
     text-align: left;
-    box-shadow:
-        0 15px 35px rgba(0, 0, 0, 0.12),
-        inset 0 0 0 1px var(--glass-edge);
+    box-shadow: var(--shadow-soft), var(--shadow-inner);
     border: 1px solid var(--glass-border);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-4px);
+    background: var(--glass-highlight);
 }
 
 .stat-card span {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .stat-card h4 {
-    font-size: 2.2rem;
+    font-size: 2rem;
     color: var(--text-head);
-    margin-top: 4px;
+    margin-top: 5px;
     font-weight: 800;
 }
 
@@ -280,13 +282,11 @@ main {
 }
 
 .history-card {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(25px) saturate(140%);
-    padding: 0.8rem 1.8rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    padding: 0.5rem 1.5rem;
     border-radius: var(--radius-lg);
-    box-shadow:
-        0 20px 40px rgba(0, 0, 0, 0.15),
-        inset 0 0 0 1px var(--glass-edge);
+    box-shadow: var(--shadow-soft), var(--shadow-inner);
     border: 1px solid var(--glass-border);
 }
 
@@ -294,8 +294,8 @@ main {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .movement-row:last-child {
@@ -335,23 +335,22 @@ main {
 }
 
 .action-btn {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--glass-bg);
     backdrop-filter: blur(10px);
-    padding: 1.5rem 1rem;
-    border-radius: 28px;
+    padding: 1.8rem 1rem;
+    border-radius: var(--radius-lg);
     color: var(--text-head);
     text-align: center;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-soft), var(--shadow-inner);
 }
 
 .action-btn:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 15px 30px rgba(37, 99, 235, 0.15);
+    transform: translateY(-6px) scale(1.02);
+    background: var(--glass-highlight);
     border-color: var(--primary);
-    background: white;
 }
 
 .action-btn i {

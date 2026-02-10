@@ -1,10 +1,23 @@
 // --- CONFIGURACIÓN SUPABASE ---
-if (typeof SUPABASE_CONFIG === 'undefined') {
-    throw new Error("Configuración de Supabase no encontrada. Verifique 'supabase-config.js'.");
+// Buscamos en orden: 1. Variables globales (Vercel/Inyectadas) 2. Objeto SUPABASE_CONFIG (Local)
+const CONFIG = {
+    url: window.SUPABASE_URL || (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : null),
+    key: window.SUPABASE_KEY || (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.key : null)
+};
+
+if (!CONFIG.url || !CONFIG.key) {
+    console.error("Supabase Config Missing!");
+    document.addEventListener('DOMContentLoaded', () => {
+        const errorDiv = document.getElementById('login-error');
+        if (errorDiv) {
+            errorDiv.textContent = "Error: Configuración de Supabase no encontrada. Verifique variables de entorno o 'supabase-config.js'.";
+            errorDiv.classList.remove('hidden');
+        }
+    });
 }
 
 const { createClient } = supabase;
-const _supabase = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+const _supabase = createClient(CONFIG.url, CONFIG.key);
 
 // --- ESTADO GLOBAL ---
 let state = {
@@ -75,12 +88,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-        // Mensaje amigable para el usuario
-        errorDiv.textContent = "Usuario o contraseña incorrectos.";
+        console.error("Login error details:", error);
+        errorDiv.textContent = `Error: ${error.message || "Usuario o contraseña incorrectos."}`;
         errorDiv.classList.remove('hidden');
         btn.disabled = false;
         btn.innerHTML = 'Acceder al Sistema <i class="fa-solid fa-chevron-right"></i>';
-    } else {
+    }
+    else {
         state.currentUser = data.user;
         showPage('home');
     }
