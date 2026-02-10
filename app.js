@@ -1,23 +1,41 @@
 // --- CONFIGURACIÓN SUPABASE ---
-// Buscamos en orden: 1. Variables globales (Vercel/Inyectadas) 2. Objeto SUPABASE_CONFIG (Local)
-const CONFIG = {
-    url: window.SUPABASE_URL || (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.url : null),
-    key: window.SUPABASE_KEY || (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG.key : null)
+let CONFIG = {
+    url: window.SUPABASE_URL || null,
+    key: window.SUPABASE_KEY || null
 };
 
-if (!CONFIG.url || !CONFIG.key) {
-    console.error("Supabase Config Missing!");
-    document.addEventListener('DOMContentLoaded', () => {
+let _supabase;
+
+async function setupSupabase() {
+    // Si no hay config localmente, intentamos cargarla de la API de Vercel
+    if (!CONFIG.url || !CONFIG.key) {
+        try {
+            const response = await fetch('/api/config');
+            if (response.ok) {
+                const apiConfig = await response.json();
+                CONFIG.url = apiConfig.url || CONFIG.url;
+                CONFIG.key = apiConfig.key || CONFIG.key;
+                console.log("Configuración cargada desde API");
+            }
+        } catch (e) {
+            console.warn("No se pudo cargar la config desde la API, usando respaldo.");
+        }
+    }
+
+    if (!CONFIG.url || !CONFIG.key) {
+        console.error("Supabase Config Missing!");
         const errorDiv = document.getElementById('login-error');
         if (errorDiv) {
-            errorDiv.textContent = "Error: Configuración de Supabase no encontrada. Verifique variables de entorno o 'supabase-config.js'.";
+            errorDiv.textContent = "Error: Configuración de Supabase no encontrada. Verifique variables de entorno en Vercel.";
             errorDiv.classList.remove('hidden');
         }
-    });
-}
+        return false;
+    }
 
-const { createClient } = supabase;
-const _supabase = createClient(CONFIG.url, CONFIG.key);
+    const { createClient } = supabase;
+    _supabase = createClient(CONFIG.url, CONFIG.key);
+    return true;
+}
 
 // --- ESTADO GLOBAL ---
 let state = {
@@ -484,4 +502,11 @@ function exportToExcel() {
 }
 
 // --- INICIALIZACIÓN ---
-initApp();
+async function start() {
+    const success = await setupSupabase();
+    if (success) {
+        initApp();
+    }
+}
+
+start();
