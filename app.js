@@ -318,7 +318,7 @@ function renderMaterialDetail(matId) {
         <div class="history-card">
             ${movements.length === 0
             ? '<p style="text-align: center; padding: 25px;">No hay movimientos todavía.</p>'
-            : movements.map(m => `
+            : movements.sort((a, b) => new Date(b.fecha_operacion) - new Date(a.fecha_operacion)).map(m => `
                     <div class="movement-row">
                         <div class="mov-info">
                             <h5>${m.tipo === 'entrada' ? '📥 Entrada' : '📤 Salida'}</h5>
@@ -432,7 +432,15 @@ function renderHistory() {
                 </table>
             </div>
         </div>
-        <button class="btn btn-outline" style="margin-top: 2rem;" onclick="renderActiveView('home')">Volver</button>
+        
+        <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-outline" onclick="renderActiveView('home')">
+                <i class="fa-solid fa-arrow-left"></i> Volver al Dashboard
+            </button>
+            <button class="btn" style="background: rgba(244, 63, 94, 0.1); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); font-size: 0.8rem;" onclick="handleResetInventory()">
+                <i class="fa-solid fa-broom"></i> Cierre de Período (Limpiar Todo)
+            </button>
+        </div>
     `;
 }
 
@@ -452,7 +460,12 @@ async function handleMaterialSubmit(e) {
         .select();
 
     if (error) {
-        alert("Error creando material: " + error.message);
+        showModal({
+            title: "Error",
+            message: "Error creando material: " + error.message,
+            icon: "fa-solid fa-xmark-circle",
+            iconColor: "#f43f5e"
+        });
     } else if (qty > 0) {
         // Registrar stock inicial como entrada
         await _supabase.from('movimientos').insert([{
@@ -476,7 +489,12 @@ async function handleMovementSubmit(e, tipo) {
     const nota = document.getElementById('mov-note').value;
 
     const material = state.materials.find(m => m.id === material_id);
-    const fecha_operacion = new Date(fecha + 'T12:00:00').toISOString();
+
+    // Si la fecha seleccionada es HOY, usamos la hora actual exacta para que el orden sea perfecto.
+    // Si es otra fecha, usamos mediodía (12:00) para evitar problemas de zona horaria.
+    const now = new Date();
+    const isToday = new Date(fecha).toLocaleDateString() === now.toLocaleDateString();
+    const fecha_operacion = isToday ? now.toISOString() : new Date(fecha + 'T12:00:00').toISOString();
 
     state.isLoading = true;
     renderActiveView('home');
@@ -485,12 +503,27 @@ async function handleMovementSubmit(e, tipo) {
         .from('movimientos')
         .insert([{ material_id, tipo, cantidad, unidad: material.unidad_principal, nota, fecha_operacion }]);
 
-    if (error) alert("Error: " + error.message);
+    if (error) {
+        showModal({
+            title: "Error",
+            message: "Error al registrar movimiento: " + error.message,
+            icon: "fa-solid fa-circle-xmark",
+            iconColor: "#f43f5e"
+        });
+    }
     await syncData();
 }
 
 function exportToExcel() {
-    if (state.movements.length === 0) return alert('No hay datos.');
+    if (state.movements.length === 0) {
+        showModal({
+            title: "Sin Datos",
+            message: "No hay movimientos registrados para exportar.",
+            icon: "fa-solid fa-circle-info",
+            iconColor: "#f59e0b"
+        });
+        return;
+    }
     let csv = "\uFEFFFecha;Hora;Material;Tipo;Cantidad;Unidad;Nota\n";
     state.movements.forEach(m => {
         const material = state.materials.find(mat => mat.id === m.material_id);
@@ -498,12 +531,110 @@ function exportToExcel() {
         csv += `${d.toLocaleDateString()};${d.toLocaleTimeString()};"${material ? material.nombre : ''}";${m.tipo.toUpperCase()};${m.cantidad};${m.unidad};"${m.nota || ''}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `Reporte_Obra_${new Date().toLocaleDateString()}.csv`);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Reporte_Inventario_${new Date().toLocaleDateString()}.csv`);
+    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+async function handleResetInventory() {
+    const confirm1 = await showModal({
+        title: "Cierre de Período",
+        message: "⚠️ ATENCIÓN: Se descargará el reporte y se BORRARÁ todo el historial de movimientos. Los stocks volverán a 0.",
+        icon: "fa-solid fa-triangle-exclamation",
+        type: "confirm",
+        confirmText: "Continuar",
+        danger: true
+    });
+    if (!confirm1) return;
+
+    const confirm2 = await showModal({
+        title: "¿Realmente Seguro?",
+        message: "🚨 Esta acción es definitiva y no se puede deshacer.",
+        icon: "fa-solid fa-circle-exclamation",
+        type: "confirm",
+        confirmText: "BORRAR TODO",
+        danger: true
+    });
+    if (!confirm2) return;
+
+    state.isLoading = true;
+    renderActiveView('historial');
+
+    try {
+        // 1. Exportar reporte automáticamente antes de borrar
+        exportToExcel();
+
+        // 2. Borrar todos los movimientos
+        const { error: errMov } = await _supabase
+            .from('movimientos')
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000'); // hack para borrar todo
+
+        if (errMov) throw errMov;
+
+        // 3. Resetear todos los stocks a 0
+        const { error: errMat } = await _supabase
+            .from('materiales')
+            .update({ stock_actual: 0 })
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+
+        if (errMat) throw errMat;
+
+        showModal({
+            title: "¡Éxito!",
+            message: "Inventario reseteado con éxito. Se ha descargado el reporte final.",
+            icon: "fa-solid fa-check-circle",
+            iconColor: "#10b981"
+        });
+    } catch (error) {
+        console.error(error);
+        showModal({
+            title: "Error",
+            message: error.message,
+            icon: "fa-solid fa-xmark-circle",
+            iconColor: "#f43f5e"
+        });
+    } finally {
+        await syncData();
+    }
+}
+
+// --- SISTEMA DE MODALES PREMIUM ---
+function showModal({ title, message, icon, iconColor, type = 'alert', confirmText = 'Aceptar', cancelText = 'Cancelar', danger = false }) {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById('modal-overlay');
+        const iconDiv = document.getElementById('modal-icon');
+        const titleH3 = document.getElementById('modal-title');
+        const messageP = document.getElementById('modal-message');
+        const buttonsDiv = document.getElementById('modal-buttons');
+
+        iconDiv.innerHTML = `<i class="${icon}" style="color: ${iconColor || (danger ? '#f43f5e' : 'var(--primary)')}"></i>`;
+        titleH3.innerText = title;
+        messageP.innerText = message;
+
+        buttonsDiv.innerHTML = '';
+
+        if (type === 'confirm') {
+            const btnCancel = document.createElement('button');
+            btnCancel.className = 'btn modal-cancel-btn';
+            btnCancel.innerText = cancelText;
+            btnCancel.onclick = () => { overlay.classList.add('hidden'); resolve(false); };
+            buttonsDiv.appendChild(btnCancel);
+        }
+
+        const btnConfirm = document.createElement('button');
+        btnConfirm.className = `btn ${danger ? 'modal-danger-btn' : 'modal-confirm-btn'}`;
+        btnConfirm.innerText = confirmText;
+        btnConfirm.onclick = () => { overlay.classList.add('hidden'); resolve(true); };
+        buttonsDiv.appendChild(btnConfirm);
+
+        overlay.classList.remove('hidden');
+    });
 }
 
 // --- INICIALIZACIÓN ---

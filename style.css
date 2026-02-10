@@ -166,13 +166,15 @@ select:focus {
 }
 
 .btn-outline {
-    background: rgba(15, 23, 42, 0.08);
-    border: 1px solid var(--industrial-slate);
-    color: var(--industrial-slate);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    backdrop-filter: blur(5px);
 }
 
 .btn-outline:hover {
-    background: var(--industrial-slate);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
     color: white;
 }
 
@@ -426,6 +428,117 @@ main {
 .flatpickr-monthDropdown-month {
     background: #0f172a !important;
     color: white !important;
+}
+
+/* --- SCROLLBAR CUSTOM --- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.1);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+}
+
+/* Ajuste para historial con scroll */
+.history-card {
+    padding-right: 1.2rem !important;
+}
+
+/* --- CUSTOM MODAL SYSTEM --- */
+#modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    transition: opacity 0.3s ease;
+}
+
+#modal-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid white;
+    padding: 2.5rem;
+    border-radius: 30px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    animation: modalSlideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+#modal-icon {
+    font-size: 3rem;
+    margin-bottom: 1.2rem;
+}
+
+#modal-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-head);
+    margin-bottom: 0.8rem;
+}
+
+#modal-message {
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+#modal-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+#modal-buttons .btn {
+    flex: 1;
+}
+
+.modal-confirm-btn {
+    background: var(--primary);
+    color: white;
+}
+
+.modal-danger-btn {
+    background: #f43f5e;
+    color: white;
+}
+
+.modal-cancel-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: var(--text-head);
 }
 
 /* Utilities */
