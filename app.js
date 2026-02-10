@@ -46,7 +46,7 @@ let state = {
     isLoading: false
 };
 
-// --- SINCRONIZACIÓN CO N LA NUBE ---
+// --- SINCRONIZACIÓN CON LA NUBE ---
 async function syncData() {
     state.isLoading = true;
     renderActiveView(state.currentView || 'home');
@@ -60,7 +60,7 @@ async function syncData() {
     if (errMats) console.error("Error cargando materiales:", errMats);
     else state.materials = mats;
 
-    // 2. Cargar Movimientos
+    // 2. Cargar Movimientos (Ordenados por fecha descendente: más nuevos arriba)
     const { data: movs, error: errMovs } = await _supabase
         .from('movimientos')
         .select('*')
@@ -155,7 +155,7 @@ function renderActiveView(view) {
     if (state.isLoading) {
         main.innerHTML = `<div style="text-align: center; padding: 50px; color: white;">
             <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; margin-bottom: 10px;"></i>
-            <p>BIenvenido al Inventario...</p>
+            <p>Bienvenido al Inventario...</p>
         </div>`;
         return;
     }
@@ -191,10 +191,15 @@ function initCalendar() {
 }
 
 function renderDashboard() {
-    const todayStr = new Date().toLocaleDateString();
-    const todayMovements = state.movements.filter(m =>
-        new Date(m.fecha_operacion).toLocaleDateString() === todayStr
-    );
+    const now = new Date();
+    const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0');
+
+    // Filtramos movimientos que ocurrieron HOY (basado en la fecha de operación YYYY-MM-DD)
+    const todayMovements = state.movements.filter(m => {
+        const mDate = new Date(m.fecha_operacion);
+        const mDateStr = mDate.getFullYear() + '-' + (mDate.getMonth() + 1).toString().padStart(2, '0') + '-' + mDate.getDate().toString().padStart(2, '0');
+        return mDateStr === todayStr;
+    });
 
     const totalEntradas = todayMovements.filter(m => m.tipo === 'entrada').length;
     const totalSalidas = todayMovements.filter(m => m.tipo === 'salida').length;
@@ -219,7 +224,7 @@ function renderDashboard() {
         <div class="history-card">
             ${todayMovements.length === 0
             ? '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 25px; font-style: italic;">Sin movimientos hoy.</p>'
-            : todayMovements.slice(0, 5).map(m => {
+            : todayMovements.sort((a, b) => new Date(b.fecha_operacion) - new Date(a.fecha_operacion)).map(m => {
                 const material = state.materials.find(mat => mat.id === m.material_id);
                 return `
                     <div class="movement-row">
@@ -255,7 +260,7 @@ function renderDashboard() {
             </div>
         </div>
         
-        <button class="btn btn-outline" style="margin-top: 1.5rem; background: rgba(245, 213, 213, 0.85); color: white;" onclick="syncData()">
+        <button class="btn btn-outline" style="margin-top: 1.5rem;" onclick="syncData()">
             <i class="fa-solid fa-sync"></i> Sincronizar Nube
         </button>
     `;
@@ -413,7 +418,7 @@ function renderHistory() {
                 <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                     <thead><tr style="background: rgba(0,0,0,0.05); text-align: left;"><th style="padding: 12px;">Fecha</th><th style="padding: 12px;">Material</th><th style="padding: 12px;">Tipo</th><th style="padding: 12px;">Cant.</th></tr></thead>
                     <tbody>
-                        ${state.movements.map(m => {
+                         ${state.movements.slice().sort((a, b) => new Date(b.fecha_operacion) - new Date(a.fecha_operacion)).map(m => {
         const material = state.materials.find(mat => mat.id === m.material_id);
         return `
                             <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
