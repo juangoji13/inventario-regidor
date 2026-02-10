@@ -9,3 +9,5 @@ dist/
 build/
 config.js
 supabase-config.js
+*.docx
+puedes pasarlo a md_.md

@@ -1,7 +1,6 @@
 // --- CONFIGURACIÓN SUPABASE ---
-// Las llaves se cargan desde 'supabase-config.js' (ignorado en Git por seguridad)
 if (typeof SUPABASE_CONFIG === 'undefined') {
-    alert("Error: Archivo de configuración 'supabase-config.js' no encontrado. Por favor, crea uno basado en 'supabase-config.example.js'.");
+    throw new Error("Configuración de Supabase no encontrada. Verifique 'supabase-config.js'.");
 }
 
 const { createClient } = supabase;
