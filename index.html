@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario Regidor | Control de Obra</title>
+    <!-- FontAwesome para iconos modernos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <!-- Supabase SDK (Cerebro de la App) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+
+    <!-- PWA & Iconos -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4c6194">
+    <link rel="apple-touch-icon" href="favicon.ico">
+
+    <!-- Flatpickr (Calendario) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(() => console.log('Servicio de Obra Activo'))
+                .catch(err => console.log('Error de servicio:', err));
+        }
+    </script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Pantalla de Inicio de Sesión -->
+        <div id="auth-page" class="page">
+            <div class="auth-header">
+                <h1>Regidor</h1>
+                <p>Gestión de Inventario</p>
+            </div>
+
+            <div class="auth-card">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label>Usuario</label>
+                        <input type="text" id="username" placeholder="Usuario" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="password" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        Acceder al Sistema <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+
+                    <div id="login-error" class="hidden"
+                        style="color: #f43f5e; text-align: center; margin-top: 1.2rem; font-size: 0.85rem; font-weight: 600;">
+                        Credenciales incorrectas. Intente de nuevo.
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard del Proyecto -->
+        <div id="app-content" class="hidden">
+            <header>
+                <div class="header-top">
+                    <div class="brand-info">
+                        <h2>Inventario Regidor</h2>
+                        <p>Ing. Mauricio Gonzalez</p>
+                    </div>
+                    <button id="logout-btn">Cerrar Sesión</button>
+                </div>
+            </header>
+
+            <main id="main-view">
+                <!-- El contenido se genera dinámicamente en app.js -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Script principal -->
+    <script src="app.js"></script>
+</body>
+
+</html>

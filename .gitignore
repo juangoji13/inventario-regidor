@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+.env
+data/*.csv
+*.log
+construction-site.jpg
+.vercel
+dist/
+build/
+config.js
+supabase-config.js

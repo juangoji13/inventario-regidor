@@ -1,0 +1,38 @@
+
+**Product Requirements Document (PRD)**
+**App Web de Inventario de Materiales para Obra de Construcción**
+
+[... Contenido original del archivo Inventory-App-PRD.docx ...]
+
+
+## 7.7 Estilo UI Clásico (Actualización Usuario)
+
+Para cumplir con preferencias del usuario, el diseño UI debe ser **clásico y plano**:
+
+- **Sin degradados, sombras, difuminados ni estilos modernos** (box-shadow: none, border-radius: 0, transition: none).
+- Colores planos: Fondo #F8F8F8, header #4682B4, btn entrada #228B22, salida #FF8C00.
+- Tablas con bordes nítidos (border-collapse: collapse, border: 2px solid #000).
+- CSS base:
+
+```css
+* { box-sizing: border-box; margin: 0; padding: 0; box-shadow: none !important; border-radius: 0 !important; transition: none !important; }
+body { font-family: Arial, sans-serif; font-size: 16px; background: #F8F8F8; color: #000; }
+.header { background: #4682B4; color: white; padding: 10px; border-bottom: 3px solid #000; }
+.btn-entrada { background: #228B22; color: white; border: 2px solid #000; padding: 12px 24px; }
+.btn-salida { background: #FF8C00; color: white; border: 2px solid #000; padding: 12px 24px; }
+table { width: 100%; border-collapse: collapse; border: 2px solid #000; }
+th, td { border: 1px solid #CCC; padding: 8px; }
+```
+
+Este estilo se aplica a todas las pantallas descritas.
+
+
+[... Resto de secciones 8-11 ...]
+
+
+**Versión:** 1.1
+**Fecha de creación:** Febrero 6, 2026
+**Última actualización:** Febrero 10, 2026
+**Cambios:** Agregada sección 7.7 Estilo UI Clásico por preferencia usuario.
+**Estado:** Aprobado para desarrollo MVP
+
