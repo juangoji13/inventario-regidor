@@ -43,7 +43,8 @@ let state = {
     materials: [],
     movements: [],
     activeMaterialId: null,
-    isLoading: false
+    isLoading: false,
+    materialSearch: ''
 };
 
 // --- SINCRONIZACIÓN CON LA NUBE ---
@@ -174,6 +175,11 @@ function renderActiveView(view) {
             break;
         case 'historial': main.innerHTML = renderHistory(); break;
         case 'detalle-material': main.innerHTML = renderMaterialDetail(state.activeMaterialId); break;
+        case 'editar-material': main.innerHTML = renderEditMaterialForm(state.activeMaterialId); break;
+    }
+
+    if (view === 'home') {
+        setTimeout(initDashboardCharts, 100);
     }
 }
 
@@ -259,11 +265,91 @@ function renderDashboard() {
                 <span>Generar Reporte</span>
             </div>
         </div>
+
+        <!-- Gráfico de Consumo -->
+        <div class="chart-card">
+            <div class="section-title" style="margin-top: 0;">
+                <span style="font-size: 0.85rem;">Consumo de la Semana</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="consumptionChart"></canvas>
+            </div>
+        </div>
         
         <button class="btn btn-outline" style="margin-top: 1.5rem;" onclick="syncData()">
             <i class="fa-solid fa-sync"></i> Sincronizar Nube
         </button>
     `;
+}
+
+function initDashboardCharts() {
+    const ctx = document.getElementById('consumptionChart');
+    if (!ctx) return;
+
+    // Obtener los 5 materiales más consumidos (salidas) en los últimos 7 días
+    const last7Days = new Date();
+    last7Days.setDate(last7Days.getDate() - 7);
+
+    const consumptionData = {};
+    state.movements.forEach(m => {
+        if (m.tipo === 'salida' && new Date(m.fecha_operacion) >= last7Days) {
+            const material = state.materials.find(mat => mat.id === m.material_id);
+            if (material) {
+                consumptionData[material.nombre] = (consumptionData[material.nombre] || 0) + m.cantidad;
+            }
+        }
+    });
+
+    const sortedLabels = Object.keys(consumptionData)
+        .sort((a, b) => consumptionData[b] - consumptionData[a])
+        .slice(0, 5);
+    const sortedValues = sortedLabels.map(label => consumptionData[label]);
+
+    if (sortedLabels.length === 0) {
+        ctx.parentNode.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding-top: 60px; font-style: italic;">No hay salidas registradas esta semana.</p>';
+        return;
+    }
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: sortedLabels,
+            datasets: [{
+                label: 'Cantidad Salida',
+                data: sortedValues,
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2,
+                borderRadius: 8,
+                barThickness: 20
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    padding: 12,
+                    displayColors: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#f8fafc', font: { weight: 'bold' } }
+                }
+            }
+        }
+    });
 }
 
 function renderMaterials() {
@@ -275,10 +361,17 @@ function renderMaterials() {
             </button>
         </div>
 
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="mat-search-input" placeholder="Buscar material..." value="${state.materialSearch}" oninput="state.materialSearch = this.value; renderActiveView('materiales')">
+        </div>
+
         <div class="history-card">
             ${state.materials.length === 0
             ? '<p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 30px;">Sin materiales registrados.</p>'
-            : state.materials.map(m => `
+            : state.materials
+                .filter(m => m.nombre.toLowerCase().includes(state.materialSearch.toLowerCase()))
+                .map(m => `
                     <div class="movement-row" style="cursor: pointer;" onclick="state.activeMaterialId = '${m.id}'; renderActiveView('detalle-material');">
                         <div class="mov-info">
                             <h5>${m.nombre}</h5>
@@ -333,11 +426,47 @@ function renderMaterialDetail(matId) {
         }
         </div>
 
-        <div style="margin-top: 2rem; display: flex; gap: 10px;">
-            <button class="btn btn-outline" onclick="renderActiveView('materiales')">
-                <i class="fa-solid fa-arrow-left"></i> Volver
-            </button>
-            <button class="btn btn-primary" onclick="renderActiveView('entrada')">Entrada</button>
+        <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" style="flex: 1;" onclick="renderActiveView('materiales')">
+                    <i class="fa-solid fa-arrow-left"></i> Volver
+                </button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="renderActiveView('entrada')">Entrada</button>
+            </div>
+            
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-sm" style="flex: 1; background: rgba(59, 130, 246, 0.08); color: var(--primary); border: 1px solid rgba(59, 130, 246, 0.2);" onclick="renderActiveView('editar-material')">
+                    <i class="fa-solid fa-pen"></i> Editar
+                </button>
+                <button class="btn btn-sm" style="flex: 1; background: rgba(244, 63, 94, 0.08); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.2);" onclick="handleDeleteMaterial('${matId}')">
+                    <i class="fa-solid fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function renderEditMaterialForm(matId) {
+    const material = state.materials.find(m => m.id === matId);
+    if (!material) return renderMaterials();
+
+    return `
+        <div class="section-title"><span>Editar: ${material.nombre}</span></div>
+        <div class="auth-card" style="margin-bottom: 2rem; animation: none;">
+            <form id="edit-material-form" onsubmit="handleEditMaterialSubmit(event, '${matId}')">
+                <div class="form-group">
+                    <label>Nuevo Nombre</label>
+                    <input type="text" id="edit-mat-name" value="${material.nombre}" required>
+                </div>
+                <div class="form-group">
+                    <label>Nueva Unidad (bultos, kg...)</label>
+                    <input type="text" id="edit-mat-unit" value="${material.unidad_principal}" required>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                    <button type="button" class="btn btn-outline" onclick="renderActiveView('detalle-material')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
         </div>
     `;
 }
@@ -481,6 +610,91 @@ async function handleMaterialSubmit(e) {
     await syncData();
 }
 
+async function handleEditMaterialSubmit(e, matId) {
+    e.preventDefault();
+    const nombre = document.getElementById('edit-mat-name').value;
+    const unidad = document.getElementById('edit-mat-unit').value;
+
+    state.isLoading = true;
+    renderActiveView('materiales');
+
+    const { error } = await _supabase
+        .from('materiales')
+        .update({ nombre, unidad_principal: unidad })
+        .eq('id', matId);
+
+    if (error) {
+        showModal({
+            title: "Error",
+            message: "Error actualizando material: " + error.message,
+            icon: "fa-solid fa-xmark-circle",
+            iconColor: "#f43f5e"
+        });
+    }
+
+    await syncData();
+    state.activeMaterialId = matId;
+    renderActiveView('detalle-material');
+}
+
+async function handleDeleteMaterial(matId) {
+    const material = state.materials.find(m => m.id === matId);
+
+    const confirm = await showModal({
+        title: "¿Eliminar Material?",
+        message: `⚠️ Se borrará "${material.nombre}" y TODO su historial de movimientos. Esta acción no se puede deshacer.`,
+        icon: "fa-solid fa-trash-can",
+        type: "confirm",
+        confirmText: "ELIMINAR",
+        danger: true
+    });
+
+    if (!confirm) return;
+
+    state.isLoading = true;
+    renderActiveView('materiales');
+
+    try {
+        // 1. Borrar movimientos asociados
+        const { error: errMov } = await _supabase
+            .from('movimientos')
+            .delete()
+            .eq('material_id', matId);
+
+        if (errMov) throw errMov;
+
+        // 2. Borrar el material
+        const { error: errMat } = await _supabase
+            .from('materiales')
+            .delete()
+            .eq('id', matId);
+
+        if (errMat) throw errMat;
+
+        // Limpiar localmente para asegurar que desaparezca de inmediato
+        state.materials = state.materials.filter(m => m.id !== matId);
+        state.movements = state.movements.filter(mov => mov.material_id !== matId);
+
+        showModal({
+            title: "Eliminado",
+            message: "Material y movimientos borrados con éxito.",
+            icon: "fa-solid fa-check-circle",
+            iconColor: "#10b981"
+        });
+    } catch (error) {
+        showModal({
+            title: "Error",
+            message: "No se pudo eliminar: " + error.message,
+            icon: "fa-solid fa-circle-xmark",
+            iconColor: "#f43f5e"
+        });
+    } finally {
+        await syncData();
+        renderActiveView('materiales');
+    }
+}
+
+
 async function handleMovementSubmit(e, tipo) {
     e.preventDefault();
     const material_id = document.getElementById('mov-mat-id').value;
@@ -490,10 +704,24 @@ async function handleMovementSubmit(e, tipo) {
 
     const material = state.materials.find(m => m.id === material_id);
 
-    // Si la fecha seleccionada es HOY, usamos la hora actual exacta para que el orden sea perfecto.
-    // Si es otra fecha, usamos mediodía (12:00) para evitar problemas de zona horaria.
+    // --- VALIDACIÓN DE STOCK ---
+    if (tipo === 'salida' && cantidad > material.stock_actual) {
+        showModal({
+            title: "Stock Insuficiente",
+            message: `No puedes retirar ${cantidad} ${material.unidad_principal}. Solo quedan ${material.stock_actual} en obra.`,
+            icon: "fa-solid fa-triangle-exclamation",
+            iconColor: "#f59e0b"
+        });
+        return;
+    }
+
+    // --- LÓGICA DE FECHA Y HORA ---
     const now = new Date();
-    const isToday = new Date(fecha).toLocaleDateString() === now.toLocaleDateString();
+    // Normalizamos ambas fechas a YYYY-MM-DD para comparar sin problemas de horas/zonas
+    const selectedDateStr = fecha; // Flatpickr devuelve YYYY-MM-DD
+    const todayStr = now.toISOString().split('T')[0];
+
+    const isToday = selectedDateStr === todayStr;
     const fecha_operacion = isToday ? now.toISOString() : new Date(fecha + 'T12:00:00').toISOString();
 
     state.isLoading = true;

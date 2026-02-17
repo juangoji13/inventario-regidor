@@ -21,6 +21,9 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Variables de entorno locales (solo desarrollo) -->
     <script src="env.js"></script>
 
@@ -63,7 +66,6 @@
                 <div class="header-top">
                     <div class="brand-info">
                         <h2>Inventario Regidor</h2>
-                        <p>Ing. Mauricio Gonzalez</p>
                     </div>
                     <button id="logout-btn">Cerrar Sesión</button>
                 </div>
@@ -78,20 +80,7 @@
     <!-- Script principal -->
     <script src="app.js"></script>
 
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('✅ Service Worker registrado:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('❌ Error al registrar Service Worker:', error);
-                    });
-            });
-        }
-    </script>
+
     <!-- Custom Modal System -->
     <div id="modal-overlay" class="hidden">
         <div id="modal-card">

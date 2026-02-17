@@ -159,6 +159,12 @@ select:focus {
     gap: 10px;
 }
 
+.btn-sm {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    border-radius: 12px;
+}
+
 .btn-primary {
     background: var(--primary);
     color: white;
@@ -166,16 +172,15 @@ select:focus {
 }
 
 .btn-outline {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    color: white;
-    backdrop-filter: blur(5px);
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #000000;
 }
 
 .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: white;
-    color: white;
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #000000;
 }
 
 /* --- DASHBOARD UI --- */
@@ -228,6 +233,41 @@ header {
 #logout-btn:hover {
     background: rgba(244, 63, 94, 0.2);
     border-color: #f43f5e;
+}
+
+.search-box {
+    margin: 1rem 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    color: var(--text-muted);
+}
+
+.search-box input {
+    padding-left: 45px !important;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+}
+
+.chart-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-main);
+    margin-top: 1.5rem;
+}
+
+.chart-container {
+    height: 200px;
+    position: relative;
+    margin-top: 1rem;
 }
 
 main {
@@ -536,9 +576,9 @@ main {
 }
 
 .modal-cancel-btn {
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: var(--text-head);
+    background: rgb(255, 255, 255);
+    border: 1px solid rgb(0, 0, 0);
+    color: black;
 }
 
 /* Utilities */
