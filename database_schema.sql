@@ -112,6 +112,11 @@ ON materiales FOR UPDATE
 TO authenticated
 USING (true);
 
+CREATE POLICY "Usuarios autenticados pueden borrar materiales"
+ON materiales FOR DELETE
+TO authenticated
+USING (true);
+
 -- Políticas para movimientos
 CREATE POLICY "Usuarios autenticados pueden ver movimientos"
 ON movimientos FOR SELECT
@@ -122,6 +127,11 @@ CREATE POLICY "Usuarios autenticados pueden insertar movimientos"
 ON movimientos FOR INSERT
 TO authenticated
 WITH CHECK (true);
+
+CREATE POLICY "Usuarios autenticados pueden borrar movimientos"
+ON movimientos FOR DELETE
+TO authenticated
+USING (true);
 
 -- ============================================
 -- 5. DATOS DE EJEMPLO (OPCIONAL)

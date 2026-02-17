@@ -37,6 +37,19 @@ async function setupSupabase() {
     return true;
 }
 
+// --- UTILIDADES ---
+function escapeHTML(str) {
+    if (!str) return "";
+    const p = document.createElement("p");
+    p.textContent = str;
+    return p.innerHTML;
+}
+
+function formatDateISO(date) {
+    const d = new Date(date);
+    return d.getFullYear() + '-' + (d.getMonth() + 1).toString().padStart(2, '0') + '-' + d.getDate().toString().padStart(2, '0');
+}
+
 // --- ESTADO GLOBAL ---
 let state = {
     currentUser: null,
@@ -197,15 +210,10 @@ function initCalendar() {
 }
 
 function renderDashboard() {
-    const now = new Date();
-    const todayStr = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0');
+    const todayStr = formatDateISO(new Date());
 
-    // Filtramos movimientos que ocurrieron HOY (basado en la fecha de operación YYYY-MM-DD)
-    const todayMovements = state.movements.filter(m => {
-        const mDate = new Date(m.fecha_operacion);
-        const mDateStr = mDate.getFullYear() + '-' + (mDate.getMonth() + 1).toString().padStart(2, '0') + '-' + mDate.getDate().toString().padStart(2, '0');
-        return mDateStr === todayStr;
-    });
+    // Filtramos movimientos que ocurrieron HOY
+    const todayMovements = state.movements.filter(m => formatDateISO(m.fecha_operacion) === todayStr);
 
     const totalEntradas = todayMovements.filter(m => m.tipo === 'entrada').length;
     const totalSalidas = todayMovements.filter(m => m.tipo === 'salida').length;
@@ -235,11 +243,11 @@ function renderDashboard() {
                 return `
                     <div class="movement-row">
                         <div class="mov-info">
-                            <h5>${material ? material.nombre : 'Material'}</h5>
+                            <h5>${escapeHTML(material ? material.nombre : 'Material')}</h5>
                             <p>${new Date(m.fecha_operacion).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                         <div class="mov-val ${m.tipo === 'entrada' ? 'val-in' : 'val-out'}">
-                            ${m.tipo === 'entrada' ? '+' : '-'}${m.cantidad} ${m.unidad}
+                            ${m.tipo === 'entrada' ? '+' : '-'}${m.cantidad} ${escapeHTML(m.unidad)}
                         </div>
                     </div>`;
             }).join('')
@@ -374,12 +382,12 @@ function renderMaterials() {
                 .map(m => `
                     <div class="movement-row" style="cursor: pointer;" onclick="state.activeMaterialId = '${m.id}'; renderActiveView('detalle-material');">
                         <div class="mov-info">
-                            <h5>${m.nombre}</h5>
-                            <p>Unidades: ${m.unidad_principal}</p>
+                            <h5>${escapeHTML(m.nombre)}</h5>
+                            <p>Unidades: ${escapeHTML(m.unidad_principal)}</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div class="mov-val" style="color: var(--primary);">
-                                ${m.stock_actual} ${m.unidad_principal}
+                                ${m.stock_actual} ${escapeHTML(m.unidad_principal)}
                             </div>
                             <i class="fa-solid fa-chevron-right" style="color: #cbd5e1; font-size: 0.8rem;"></i>
                         </div>
@@ -401,10 +409,10 @@ function renderMaterialDetail(matId) {
     const movements = state.movements.filter(m => m.material_id === matId);
 
     return `
-        <div class="section-title"><span>Detalle: ${material.nombre}</span></div>
+        <div class="section-title"><span>Detalle: ${escapeHTML(material.nombre)}</span></div>
         <div class="stat-card" style="margin-bottom: 2rem; border-left: 5px solid var(--primary);">
             <span>Saldo en Obra</span>
-            <h4 style="color: var(--primary);">${material.stock_actual} ${material.unidad_principal}</h4>
+            <h4 style="color: var(--primary);">${material.stock_actual} ${escapeHTML(material.unidad_principal)}</h4>
         </div>
 
         <div class="section-title"><span>Historial Específico</span></div>
@@ -552,9 +560,9 @@ function renderHistory() {
         return `
                             <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
                                 <td style="padding: 12px; color: var(--text-main); font-weight: 500;">${new Date(m.fecha_operacion).toLocaleDateString()}</td>
-                                <td style="padding: 12px; color: var(--text-head); font-weight: 700;">${material ? material.nombre : 'Desconocido'}</td>
+                                <td style="padding: 12px; color: var(--text-head); font-weight: 700;">${escapeHTML(material ? material.nombre : 'Desconocido')}</td>
                                 <td style="padding: 12px; color: ${m.tipo === 'entrada' ? '#059669' : '#e11d48'}; font-weight: 800;">${m.tipo.toUpperCase()}</td>
-                                <td style="padding: 12px; font-weight: 800; color: var(--text-head);">${m.cantidad} ${m.unidad}</td>
+                                <td style="padding: 12px; font-weight: 800; color: var(--text-head);">${m.cantidad} ${escapeHTML(m.unidad)}</td>
                             </tr>`;
     }).join('')}
                     </tbody>
@@ -756,7 +764,7 @@ function exportToExcel() {
     state.movements.forEach(m => {
         const material = state.materials.find(mat => mat.id === m.material_id);
         const d = new Date(m.fecha_operacion);
-        csv += `${d.toLocaleDateString()};${d.toLocaleTimeString()};"${material ? material.nombre : ''}";${m.tipo.toUpperCase()};${m.cantidad};${m.unidad};"${m.nota || ''}"\n`;
+        csv += `${d.toLocaleDateString()};${d.toLocaleTimeString()};"${escapeHTML(material ? material.nombre : '')}";${m.tipo.toUpperCase()};${m.cantidad};${escapeHTML(m.unidad)};"${escapeHTML(m.nota || '')}"\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
